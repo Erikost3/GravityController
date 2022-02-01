@@ -17,7 +17,7 @@ function Gravity.PhysicsObject.init(self: table)
         )
     )
 
-    self.Force = not self.NoPhysics or Instance.new("BodyForce", self.Instance)
+    self.Force = not self.NoPhysics and (self.Force or Instance.new("BodyForce", self.Instance:IsA("Model") and self.Instance.PrimaryPart or self.Instance)) or nil
 
     return self
 end
@@ -41,15 +41,18 @@ end
 
 function Gravity.getInstanceCenter(instance: Instance)
 
-    local sum, parts = Vector3.zero, 0
+    local sum = Vector3.zero
+    local parts = 0
 
     if instance:IsA("BasePart") then
         sum += instance.Position
+        parts += 1
     end
 
     for i,v in pairs(instance:GetDescendants()) do
         if v:IsA("BasePart") then
-            sum += instance.Position
+            sum += v.Position
+            parts += 1
         end
     end
 
@@ -61,7 +64,8 @@ function Gravity.getInstanceGravityVelocity(self: table, instance: Instance)
     
     local velocity = Vector3.zero
 
-    local m1, pos1 = Gravity.getInstanceMass(instance), Gravity.getInstanceMass(instance)
+    local m1 = Gravity.getInstanceMass(instance)
+    local pos1 = Gravity.getInstanceCenter(instance)
 
     assert(
         pos1 ~= nil,
@@ -69,8 +73,9 @@ function Gravity.getInstanceGravityVelocity(self: table, instance: Instance)
     )
 
     for i,v in pairs(self.PhysicsObjects) do
-        if v.Instance ~= nil then
-            local m2, pos2 = Gravity.getInstanceMass(instance), Gravity.getInstanceMass(v.Instance)
+        if v.Instance ~= nil and v.Instance ~= instance then
+            local m2 = Gravity.getInstanceMass(v.Instance)
+            local pos2 = Gravity.getInstanceCenter(v.Instance)
 
             if pos2 then
 
@@ -99,8 +104,10 @@ function Gravity.physicsStep(self: table, time: any, deltaTime: any)
     for i,v in pairs(self.PhysicsObjects) do
         if v.Instance ~= nil then
             if v.Force then
-                v.Force += Gravity.counterGravity(v.Instance)
-                v.Force += Gravity.getInstanceGravityVelocity(self, v.Instance)
+                v.Force.Force +=
+                    Gravity.counterGravity(v.Instance) 
+                    + Gravity.getInstanceGravityVelocity(self, v.Instance)
+                    - v.Force.Force
             end
         else
             v:Destroy()
@@ -158,13 +165,34 @@ function Gravity.addPhysicsObject(self: table, instance: Instance, customProps: 
     return newPhysicsObject
 end
 
+function Gravity.addMultiplePhysicsObjects(self: table, Instances: table, customProps: table)
+    for i,v in pairs(Instances) do
+        if typeof(v) == "Instance" then
+            local suc, msg = pcall(function()
+                Instances[i] = self:AddPhysicsObject(v, customProps)
+            end)
+            if not suc and msg then
+                warn(string.format("GravityController.Gravity.addMultiplePhysicsObjects: unexpected error: %s", msg))
+                Instances[i] = msg
+            end
+        else
+            warn(string.format("GravityController.Gravity.addMultiplePhysicsObjects: %s.%s is not an Instance", v.Parent or "?", v))
+        end
+    end
+    return Instances
+end
+
 function Gravity.init(self: table)
 
     self.GravityConstant = self.GravityConstant or (6.674 ^ (10^-11)) -- https://en.wikipedia.org/wiki/Gravitational_constant
     self.PhysicsObjects = self.PhysicsObjects or {}
 
     function self:AddPhysicsObject(...)
-        return Gravity.findPhysicsObjectBy(self, ...)
+        return Gravity.addPhysicsObject(self, ...)
+    end
+
+    function self:AddMultiplePhysicsObject(...)
+        return Gravity.addMultiplePhysicsObjects(self, ...)
     end
 
     function self:FindPhysicsObjectBy(...)
@@ -172,7 +200,7 @@ function Gravity.init(self: table)
     end
 
     self.PhysicsConnection = RunService.Stepped:Connect(function(time, deltaTime)
-        Gravity.PhysicsStep(time, deltaTime)
+        Gravity.physicsStep(self, time, deltaTime)
     end)
 
     return self
