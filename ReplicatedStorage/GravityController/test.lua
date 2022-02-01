@@ -39,4 +39,51 @@ function Test.gravity()
     
 end
 
+function Test.character()
+    
+    local Dummy = script:FindFirstChild("Dummy")
+
+    if not Dummy then warn("GravityController.Test.character: Expected a character 'Dummy' inside script") end
+
+    assert(
+        Dummy:IsA("Model") and Dummy.PrimaryPart ~= nil,
+        string.format(
+            "GravityController.Test.character: Expected Dummy to be a Model with a PrimaryPart, got '%s, PrimaryPart==%s'", 
+            Dummy.ClassName, 
+            tostring(Dummy.PrimaryPart))
+    )
+
+    Test.initializeTesting()
+
+    local CharacterTestFolder = Instance.new("Folder", Test.Folder)
+    CharacterTestFolder.Name = string.format("CharacterTestFolder:%s", tick())
+
+    Dummy = Dummy:Clone(); Dummy.Parent = CharacterTestFolder
+
+    local Humanoid = Dummy:FindFirstChildOfClass("Humanoid")
+    if Humanoid then
+        Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+    end
+
+    _G.GravityController.CharacterController {Character = Dummy}
+
+    local Part1 = newPart {Position = Vector3.new(0, 50, 0), Size = Vector3.new(100, 100, 100), CanCollide = true, Anchored = false, Parent = CharacterTestFolder}
+
+    Part1.CustomPhysicalProperties = PhysicalProperties.new(
+        .7,
+        .1,
+        1
+    )
+
+    _G.GravityController.CharacterController.Gravity:AddPhysicsObject(Part1)
+
+    Dummy.PrimaryPart.Anchored = false
+
+end
+
+function Test.testall()
+    Test.gravity()
+    Test.character()
+end
+
 return Test

@@ -182,6 +182,13 @@ function Gravity.addMultiplePhysicsObjects(self: table, Instances: table, custom
     return Instances
 end
 
+function Gravity.destroy(self: table)
+    self.PhysicsConnection:Disconnect()
+    for i,v in pairs(self.PhysicsObjects) do
+        v:Destroy()
+    end
+end
+
 function Gravity.init(self: table)
 
     self.GravityConstant = self.GravityConstant or (6.674 ^ (10^-11)) -- https://en.wikipedia.org/wiki/Gravitational_constant
@@ -197,6 +204,10 @@ function Gravity.init(self: table)
 
     function self:FindPhysicsObjectBy(...)
         return Gravity.findPhysicsObjectBy(self, ...)
+    end
+
+    function self:Destroy(...)
+        return Gravity.destroy(self, ...)
     end
 
     self.PhysicsConnection = RunService.Stepped:Connect(function(time, deltaTime)
