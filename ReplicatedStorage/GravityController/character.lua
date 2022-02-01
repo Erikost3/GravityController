@@ -1,4 +1,3 @@
-local Debris = game:GetService("Debris")
 local RunService = game:GetService("RunService")
 local Character = _G.GravityController.Object:subclass{}
 
@@ -32,16 +31,13 @@ function Character.calculateForce(self: table, force: table, rayCastParams: Rayc
 
     if not rs or not rs.Normal or not rs.Instance or not rs.Position then return Vector3.zero end
 
-    local dist = (force.Part.Position - rs.Position).Magnitude
-
-    local p1, p2 = force.Part.Position, -rs.Normal * dist 
+    local p1, p2 = force.Part.Position, rs.Position
     local p1Mass, p2Mass = Character.getMass(force.Part), Character.getMass(rs.Instance)
+    local dist = (p1 - p2).Magnitude
 
-    local gDist = (p2-p1).Magnitude
-    
     local Gravity = _G.GravityController.ForceOfGravity
 
-    local Force = -rs.Normal * (Gravity * (p1Mass * p2Mass)/(gDist^2))
+    local Force = -rs.Normal * (Gravity * (p1Mass * p2Mass)/(dist^2))
 
     return Force
 end
