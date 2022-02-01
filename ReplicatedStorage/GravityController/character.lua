@@ -101,15 +101,12 @@ function Character.added(self: table, char: Model)
 
     for i,v in pairs(char:GetDescendants()) do
         if v:IsA("BasePart") then
-            
-            if v.Name == "HumanoidRootPart" then
-                self.BG = self.RootPart:FindFirstChildOfClass("BodyGyro") or Instance.new("BodyGyro", v)
-                self.BG.MaxTorque = Vector3.new(1,0,0) * Character.getMass(char) * math.pi * 100
-            end
-
             Character.addPhysics(self, v, self.RootPart)
         end
     end
+
+    self.BG = self.RootPart:FindFirstChildOfClass("BodyGyro") or Instance.new("BodyGyro", v)
+    self.BG.MaxTorque = Vector3.new(1,0,0) * Character.getMass(char) * math.pi * 100
 
     if Character.FixCharacterStates then
        Character.fixStates(self, char)
