@@ -9,7 +9,7 @@ function DebugPart.draw(self: table, origin: Vector3, target: Vector3)
     local dir = dif.Unit
     local dist = dif.Magnitude
 
-    self.Part.Size = Vector3.new(dist, self.Thickness,  self.Thickness)
+    self.Part.Size = Vector3.new(self.Thickness,  self.Thickness, dist)
     self.Part.CFrame = CFrame.lookAt(origin, origin+dir) * CFrame.new(0,0,-dist/2)
 end
 
@@ -23,6 +23,10 @@ function DebugPart.init(self: table)
     self.Part.CanCollide = false
 
     self.Thickness = self.Thickness or .1
+
+    function self:Draw(...)
+        return DebugPart.draw(self, ...)
+    end
 
     return self
 end

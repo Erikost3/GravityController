@@ -65,19 +65,29 @@ function Test.character()
         Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
     end
 
-    _G.GravityController.CharacterController {Character = Dummy}
+    _G.GravityController.CharacterController {Character = Dummy, Debug = true}
 
     local Part1 = newPart {Position = Vector3.new(0, 50, 0), Size = Vector3.new(100, 100, 100), CanCollide = true, Anchored = false, Parent = CharacterTestFolder}
 
     Part1.CustomPhysicalProperties = PhysicalProperties.new(
-        .7,
+        .2,
         .1,
         1
     )
 
     _G.GravityController.CharacterController.Gravity:AddPhysicsObject(Part1)
 
-    Dummy.PrimaryPart.Anchored = false
+    local Part2 = newPart {Position = Vector3.new(0, 0, 5000), Size = Vector3.new(1000, 1000, 1000), CanCollide = true, Anchored = false, Parent = CharacterTestFolder}
+
+    Part2.CustomPhysicalProperties = PhysicalProperties.new(
+        .1,
+        .3,
+        5
+    )
+
+    _G.GravityController.CharacterController.Gravity:AddPhysicsObject(Part2)
+
+    --Dummy.PrimaryPart.Anchored = false
 
 end
 

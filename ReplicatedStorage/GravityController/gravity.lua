@@ -3,7 +3,7 @@ local Gravity = _G.GravityController.Object:subclass{}
 
 Gravity.PhysicsObject = _G.GravityController.Object:subclass{}
 
-function Gravity.PhysicsObject:Destroy(self: table)
+function Gravity.PhysicsObject.destroy(self: table)
     return self.Force and self.Force:Destroy()
 end
 
@@ -18,6 +18,10 @@ function Gravity.PhysicsObject.init(self: table)
     )
 
     self.Force = not self.NoPhysics and (self.Force or Instance.new("BodyForce", self.Instance:IsA("Model") and self.Instance.PrimaryPart or self.Instance)) or nil
+
+    function self:Destroy(...)
+        return Gravity.PhysicsObject.destroy(self, ...)
+    end
 
     return self
 end
@@ -104,10 +108,12 @@ function Gravity.physicsStep(self: table, time: any, deltaTime: any)
     for i,v in pairs(self.PhysicsObjects) do
         if v.Instance ~= nil then
             if v.Force then
-                v.Force.Force +=
+                pcall(function()
+                    v.Force.Force +=
                     Gravity.counterGravity(v.Instance) 
                     + Gravity.getInstanceGravityVelocity(self, v.Instance)
                     - v.Force.Force
+                end)
             end
         else
             v:Destroy()
@@ -149,7 +155,7 @@ function Gravity.addPhysicsObject(self: table, instance: Instance, customProps: 
     assert(
         instance:IsA("Model") or instance:IsA("BasePart"),
         string.format(
-            "GravityController.Gravity.PhysicsObject.addPhysicsObject: Expected instance to be of the type Model or BasePart, got '%s'",
+            "GravityController.Gravity.PhysicsObject.addPhysicsObject: Expected instance to be of the type Model and have a PrimaryPart, or BasePart, got '%s'",
             typeof(instance)
         )
     )
